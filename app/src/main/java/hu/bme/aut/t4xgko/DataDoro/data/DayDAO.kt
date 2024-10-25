@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.OnConflictStrategy
 
 @Dao
 interface DayDAO {
@@ -12,6 +13,6 @@ interface DayDAO {
   @Insert(onConflict = OnConflictStrategy.IGNORE) fun insertDay(day: Day): Long
   @Delete fun deleteDay(day: Day)
   @Update fun updateDay(day: Day)
-  @Query("SELECT * FROM Day WHERE YearMonthDay = :currentDate LIMIT 1")
-  fun getDayByDate(currentDate: String): Day?
+  @Query("SELECT * FROM Day WHERE YearMonthDay = :Date LIMIT 1")
+  fun getDay(Date: String): Day?
 }

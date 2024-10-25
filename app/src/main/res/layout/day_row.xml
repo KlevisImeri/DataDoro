@@ -1,66 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/card_view"
+  xmlns:card_view="http://schemas.android.com/apk/res-auto"
+  android:id="@+id/card_view"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:layout_margin="10dp"
+  card_view:cardBackgroundColor="#fff6a0"
+  card_view:cardCornerRadius="4dp"
+  card_view:cardElevation="4dp">
+
+  <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    card_view:cardBackgroundColor="#fff6a0"
-    card_view:cardCornerRadius="4dp"
-    card_view:cardElevation="4dp">
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+    <TextView
+      android:id="@+id/tvDate"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:textSize="10sp" />
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp" />
+    <ImageView
+      android:id="@+id/ivIcon"
+      android:layout_width="50dp"
+      android:layout_height="50dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:orientation="horizontal"
-            android:padding="5dp">
+  </LinearLayout>
 
-            <ImageView
-                android:id="@+id/ivIcon"
-                android:layout_width="50dp"
-                android:layout_height="50dp" />
-
-            <CheckBox
-                android:id="@+id/cbDone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="day" />
-
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <Button
-                    android:id="@+id/btnDelete"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Delete" />
-
-                <Button
-                    android:id="@+id/btnEdit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Edit" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-
-    </LinearLayout>
 
 </androidx.cardview.widget.CardView>

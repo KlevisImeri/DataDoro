@@ -9,15 +9,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
-import hu.bme.aut.dayrecyclerviewdemo.adapter.DayAdapter
-import hu.bme.aut.dayrecyclerviewdemo.data.AppDatabase
-import hu.bme.aut.dayrecyclerviewdemo.data.Day
-import hu.bme.aut.dayrecyclerviewdemo.databinding.ActivityMainBinding
-import hu.bme.aut.dayrecyclerviewdemo.touch.DayRecyclerTouchCallback
+import hu.bme.aut.t4xgko.DataDoro.adapter.DayAdapter
+import hu.bme.aut.t4xgko.DataDoro.data.AppDatabase
+import hu.bme.aut.t4xgko.DataDoro.data.Day
+import hu.bme.aut.t4xgko.DataDoro.databinding.ActivityMainBinding
+import hu.bme.aut.t4xgko.DataDoro.touch.DayRecyclerTouchCallback
 import java.util.Date
+import java.time.LocalDate
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt
 
-class MainActivity : AppCompatActivity(), DayDialog.DayHandler {
+class MainActivity : AppCompatActivity() {
 
   private lateinit var appBarConfiguration: AppBarConfiguration
   private lateinit var binding: ActivityMainBinding
@@ -38,7 +39,6 @@ class MainActivity : AppCompatActivity(), DayDialog.DayHandler {
 
     setSupportActionBar(binding.toolbar)
 
-    binding.fab.setOnClickListener { view -> showAddDayDialog() }
 
     if (!wasStartedBefore()) {
       MaterialTapTargetPrompt.Builder(this)
@@ -47,15 +47,16 @@ class MainActivity : AppCompatActivity(), DayDialog.DayHandler {
               .setSecondaryText("Click here to create new items")
               .show()
     }
+
     Thread {
-              AppDatabase.getInstance(this).dayDao().insertDay(Day(
+              AppDatabase.getInstance(this).DayDao().insertDay(Day(
                 DayId = null, 
-                yearMonthDay = localDate.format(formatter), 
+                YearMonthDay = LocalDate.now().toString(), 
                 dayText = "", 
                 image = null, 
                 TimeStudiedMin = 0 
               ))
-              var dayList = AppDatabase.getInstance(this).dayDao().getAllDays()
+              var dayList = AppDatabase.getInstance(this).DayDao().getAllDays()
               runOnUiThread {
                 dayAdapter = DayAdapter(this, dayList)
                 binding.recyclerDay.adapter = dayAdapter
@@ -104,37 +105,5 @@ class MainActivity : AppCompatActivity(), DayDialog.DayHandler {
       R.id.action_settings -> true
       else -> super.onOptionsItemSelected(item)
     }
-  }
-
-  fun showAddDayDialog() {
-    DayDialog().show(supportFragmentManager, "Dialog")
-  }
-  private fun saveDay(day: Day) {
-    Thread {
-              day.dayId = AppDatabase.getInstance(this).dayDao().insertDay(day)
-              runOnUiThread { dayAdapter.addDay(day) }
-            }
-            .start()
-  }
-  override fun dayCreated(day: Day) {
-    saveDay(day)
-  }
-
-  var editIndex: Int = -1
-  public fun showEditDayDialog(dayToEdit: Day, index: Int) {
-    editIndex = index
-    val editItemDialog = DayDialog()
-    val bundle = Bundle()
-    bundle.putSerializable(KEY_EDIT, dayToEdit)
-    editItemDialog.arguments = bundle
-    editItemDialog.show(supportFragmentManager, "EDITDIALOG")
-  }
-
-  override fun dayUpdated(day: Day) {
-    Thread {
-              AppDatabase.getInstance(this).dayDao().updateDay(day)
-              runOnUiThread { dayAdapter.updateDay(day, editIndex) }
-            }
-            .start()
   }
 }
