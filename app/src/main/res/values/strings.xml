@@ -53,4 +53,9 @@
     <item name="cornerFamily">rounded</item>
     <item name="cornerSize">16dp</item>
   </style>
+
+  <string-array name="thread_sleep_options">
+      <item>10</item>
+      <item>1000</item>
+  </string-array>
 </resources>

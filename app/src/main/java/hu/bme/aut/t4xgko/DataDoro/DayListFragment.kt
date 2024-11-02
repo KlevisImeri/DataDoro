@@ -50,7 +50,7 @@ class DayListFragment : Fragment() {
                 YearMonthDay = LocalDate.now().toString(),
                 dayText = "",
                 TimeStudiedSec = 0,
-                GoalTimeSec = 30 * 60 // 30 min
+                GoalTimeSec = 8 * 60 * 60 // 8 hours
             ))
             updateProgressBar(10)
 
