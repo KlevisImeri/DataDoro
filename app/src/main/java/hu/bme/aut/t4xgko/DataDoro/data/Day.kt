@@ -11,11 +11,12 @@ import java.io.Serializable
     indices = [Index(value = ["YearMonthDay"], unique = true)]
 )
 data class Day(
-    @PrimaryKey(autoGenerate = true) var DayId: Long?, 
-    @ColumnInfo(name = "YearMonthDay") var YearMonthDay: String,
-    @ColumnInfo(name = "Text") var dayText: String,
-    @ColumnInfo(name = "Image") var image: ByteArray?,
-    @ColumnInfo(name = "TimeStudiedMin") var TimeStudiedMin: Int,
+    @PrimaryKey(autoGenerate = true) var DayId: Long? = null,
+    @ColumnInfo(name = "YearMonthDay") var YearMonthDay: String = "",
+    @ColumnInfo(name = "Text") var dayText: String = "",
+    @ColumnInfo(name = "Image") var image: String? = null,
+    @ColumnInfo(name = "TimeStudiedSec") var TimeStudiedSec: Int = 0,
+    @ColumnInfo(name = "GoalTimeSec") var GoalTimeSec: Int = 8*60*60 
 ) : Serializable {
     companion object {
         fun nullDay() = Day(
@@ -23,7 +24,9 @@ data class Day(
             YearMonthDay = "This Day does not exist",
             dayText = "This Day does not exist",
             image = null,
-            TimeStudiedMin = 0
+            TimeStudiedSec = 0,
+            GoalTimeSec = 0
         )
     }
 }
+

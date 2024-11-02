@@ -5,28 +5,25 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = arrayOf(Day::class), version = 1)
+@Database(entities = [Day::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-  abstract fun DayDao(): DayDAO
+    abstract fun dayDao(): DayDAO
 
-  companion object {
-    private var INSTANCE: AppDatabase? = null
-    fun getInstance(context: Context): AppDatabase {
-      if (INSTANCE == null) {
-        INSTANCE =
-                Room.databaseBuilder(
-                                context.getApplicationContext(),
-                                AppDatabase::class.java,
-                                "Days.db"
-                        )
-                        .fallbackToDestructiveMigration()
-                        .build()
-      }
-      return INSTANCE!!
-    }
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
-    fun destroyInstance() {
-      INSTANCE = null
+        fun getInstance(context: Context): AppDatabase {
+            if (INSTANCE == null) {
+                INSTANCE = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "Days.db"
+                )
+                .fallbackToDestructiveMigration()
+                .build()
+            }
+            return INSTANCE!!
+        }
     }
-  }
 }
