@@ -3,6 +3,7 @@ package hu.bme.aut.t4xgko.DataDoro
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -45,7 +46,9 @@ class ClockFragment : Fragment() {
 
     private var timerState = ACTIVE
     private var currentTime = STUDY_TIME
-
+    private var startSound: MediaPlayer? = null
+    private var endSound: MediaPlayer? = null
+ 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -56,10 +59,10 @@ class ClockFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
         setupNotificationPermissionHandler()
         createNotificationChannel()
         loadPreferences()
+        initializeMediaPlayers()
         updateUI()
 
         binding.startButton.setOnClickListener {
@@ -80,6 +83,13 @@ class ClockFragment : Fragment() {
 
         binding.timerText.setOnClickListener {
             showSettingsDialog()
+        }
+    }
+
+    private fun initializeMediaPlayers() {
+        context?.let { ctx ->
+            startSound = MediaPlayer.create(ctx, R.raw.clock_start)
+            endSound = MediaPlayer.create(ctx, R.raw.clock_end)
         }
     }
 
@@ -142,6 +152,7 @@ class ClockFragment : Fragment() {
     private fun startTimer() {
         isRunning = true
         binding.startButton.text = "Stop"
+        startSound?.start()
         updateNotification()
         
         Thread {
@@ -188,9 +199,11 @@ class ClockFragment : Fragment() {
 
     private fun switchState() {
         if (timerState == ACTIVE) {
+            endSound?.start()
             timerState = REST
             currentTime = REST_TIME
         } else {
+            startSound?.start()
             timerState = ACTIVE
             currentTime = STUDY_TIME
         }
@@ -244,11 +257,29 @@ class ClockFragment : Fragment() {
         dialog.show(parentFragmentManager, "SettingsDialog")
     }
 
+    private fun releaseMediaPlayers() {
+        startSound?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            release()
+        }
+        endSound?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            release()
+        }
+        startSound = null
+        endSound = null
+    }
+
 
     override fun onDestroyView() {
         if (isRunning) {
             cancelNotification()
         }
+        releaseMediaPlayers()
         _binding = null
         super.onDestroyView()
     }
