@@ -16,7 +16,9 @@ data class Day(
     @ColumnInfo(name = "Text") var dayText: String = "",
     @ColumnInfo(name = "Image") var image: String? = null,
     @ColumnInfo(name = "TimeStudiedSec") var TimeStudiedSec: Int = 0,
-    @ColumnInfo(name = "GoalTimeSec") var GoalTimeSec: Int = 8*60*60 
+    @ColumnInfo(name = "GoalTimeSec") var GoalTimeSec: Int = 8*60*60,
+    @ColumnInfo(name = "Temperature") var Temperature: Int? = null,
+    @ColumnInfo(name = "City") var City: String? = null
 ) : Serializable {
     companion object {
         fun nullDay() = Day(
@@ -25,8 +27,9 @@ data class Day(
             dayText = "This Day does not exist",
             image = null,
             TimeStudiedSec = 0,
-            GoalTimeSec = 0
+            GoalTimeSec = 0,
+            Temperature = null,
+            City = null
         )
     }
 }
-

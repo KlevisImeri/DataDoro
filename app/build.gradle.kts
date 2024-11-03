@@ -64,9 +64,9 @@ dependencies {
     kapt("androidx.room:room-compiler:$room_version")
 
 
-    val glide_version = "4.13.2"
-    implementation("com.github.bumptech.glide:glide:$glide_version")
-    kapt("com.github.bumptech.glide:compiler:$glide_version")
+    // val glide_version = "4.13.2"
+    // implementation("com.github.bumptech.glide:glide:$glide_version")
+    // kapt("com.github.bumptech.glide:compiler:$glide_version")
 
     val camerax_version = "1.2.2"
     implementation("androidx.camera:camera-core:${camerax_version}")
@@ -75,6 +75,10 @@ dependencies {
     implementation("androidx.camera:camera-view:${camerax_version}")
     // implementation("androidx.camera:camera-video:${camerax_version}")
     // implementation("androidx.camera:camera-extensions:${camerax_version}")
+
+    val retrofit_version = "2.9.0"
+    implementation("com.squareup.retrofit2:retrofit:${retrofit_version}")
+    implementation("com.squareup.retrofit2:converter-gson:${retrofit_version}")
 
 }
 
