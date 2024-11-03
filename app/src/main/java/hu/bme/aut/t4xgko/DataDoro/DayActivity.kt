@@ -42,11 +42,11 @@ class DayActivity : AppCompatActivity() {
 
         locationPermissionHandler = LocationPermissionHandler(this)
         locationPermissionHandler.setupPermissions {
-            fetchLocationAndWeather()
+          setupDay()
         }
         locationPermissionHandler.checkAndRequestPermissions()
 
-        setupDay()
+        
         setupClickListeners()
     }
 
@@ -71,6 +71,7 @@ class DayActivity : AppCompatActivity() {
         Thread {
             val loadedDay = AppDatabase.getInstance(this@DayActivity).dayDao().getDay(yearMonthDay)
             day = loadedDay ?: Day.nullDay()
+            fetchLocationAndWeather()
             runOnUiThread {
                 updateUI()
             }
@@ -78,7 +79,6 @@ class DayActivity : AppCompatActivity() {
     }
 
     private fun fetchLocationAndWeather() {
-        Thread {
             if (day.City == null || day.Temperature == null) {
                 val currCity = locationPermissionHandler.getLastKnownLocation()
                 if (currCity != null) {
@@ -87,6 +87,7 @@ class DayActivity : AppCompatActivity() {
                         runOnUiThread {
                             if (temperature != null) {
                                 day.Temperature = temperature
+                                saveDay()
                                 updateUI()
                             } else {
                                 Toast.makeText(this, "Failed to fetch weather data", Toast.LENGTH_SHORT).show()
@@ -95,7 +96,6 @@ class DayActivity : AppCompatActivity() {
                     }
                 }
             }
-        }.start()
     }
 
     private fun updateUI() {
