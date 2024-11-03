@@ -16,6 +16,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import hu.bme.aut.t4xgko.DataDoro.databinding.ActivityCameraBinding
+import hu.bme.aut.t4xgko.DataDoro.permissionHandlers.CameraPermissionHandler
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
@@ -38,7 +39,7 @@ class CameraActivity : AppCompatActivity() {
     private val cameraExecutor: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
     private lateinit var imageCapture: ImageCapture
     private var photoFile: File? = null
-    private lateinit var permissionHandler: PermissionHandler
+    private lateinit var cameraPermissionHandler: CameraPermissionHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,9 +50,9 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun setupPermissions() {
-        permissionHandler = PermissionHandler(this)
-        permissionHandler.setupPermissions { startCamera() }
-        permissionHandler.checkAndRequestPermissions()
+        cameraPermissionHandler = CameraPermissionHandler(this)
+        cameraPermissionHandler.setupPermissions { startCamera() }
+        cameraPermissionHandler.checkAndRequestPermissions()
     }
 
     private fun setupButtons() {

@@ -55,7 +55,7 @@ class DayActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         with(binding) {
-            btnSave.setOnClickListener { exit() }
+            btnSave.setOnClickListener { saveDay(); finish() }
             btnCamera.setOnClickListener { launchCamera() }
             imageView.setOnClickListener { showFullscreenImage() }
         }
@@ -98,16 +98,6 @@ class DayActivity : AppCompatActivity() {
         AppDatabase.getInstance(this).dayDao().updateDay(day)
       }.start()
     }
-
-    private fun exit() {
-        Thread {
-            runOnUiThread {
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
-            }
-        }.start()
-    }
-
 
     private fun showFullscreenImage() {
         day.image?.let { imagePath ->

@@ -1,180 +1,255 @@
-  package hu.bme.aut.t4xgko.DataDoro
+package hu.bme.aut.t4xgko.DataDoro
 
-  import android.content.Context
-  import android.os.Bundle
-  import android.os.Handler
-  import android.os.Looper
-  import android.view.LayoutInflater
-  import android.view.View
-  import android.view.ViewGroup
-  import androidx.fragment.app.Fragment
-  import hu.bme.aut.t4xgko.DataDoro.databinding.FragmentClockBinding
-  import hu.bme.aut.t4xgko.DataDoro.adapter.DayAdapter
-  import hu.bme.aut.t4xgko.DataDoro.SettingsDialogFragment
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.fragment.app.Fragment
+import hu.bme.aut.t4xgko.DataDoro.databinding.FragmentClockBinding
+import hu.bme.aut.t4xgko.DataDoro.adapter.DayAdapter
+import hu.bme.aut.t4xgko.DataDoro.SettingsDialogFragment
+import hu.bme.aut.t4xgko.DataDoro.permissionHandlers.NotificationPermissionHandler
 
-  class ClockFragment : Fragment() {
 
-      private var _binding: FragmentClockBinding? = null
-      private val binding get() = _binding!!
+class ClockFragment : Fragment() {
+    private var _binding: FragmentClockBinding? = null
+    private val binding get() = _binding!!
 
-      private val handler = Handler(Looper.getMainLooper())
-      private var isRunning = false
+    private var isRunning = false
+    private lateinit var notificationPermissionHandler: NotificationPermissionHandler
+    private var hasNotificationPermission = false
 
-      companion object {
-          var STUDY_TIME = 20 * 60
-          var REST_TIME = 5 * 60
-          var THREAD_SLEEP: Long = 1000 // this can make the app run faster
-          const val ACTIVE = 0
-          const val REST = 1
-          const val PREFS_NAME = "ClockPrefs"
-          const val KEY_TIMER_STATE = "timerState"
-          const val KEY_CURRENT_TIME = "currentTime"
-          const val KEY_STUDY_TIME = "studyTime"
-          const val KEY_REST_TIME = "restTime"
-          const val KEY_THREAD_SLEEP = "threadSleep"
-      }
+    companion object {
+        var STUDY_TIME = 20 * 60
+        var REST_TIME = 5 * 60
+        var THREAD_SLEEP: Long = 1000
+        const val ACTIVE = 0
+        const val REST = 1
+        const val PREFS_NAME = "ClockPrefs"
+        const val KEY_TIMER_STATE = "timerState"
+        const val KEY_CURRENT_TIME = "currentTime"
+        const val KEY_STUDY_TIME = "studyTime"
+        const val KEY_REST_TIME = "restTime"
+        const val KEY_THREAD_SLEEP = "threadSleep"
+        private const val NOTIFICATION_CHANNEL_ID = "TIMER_CHANNEL_ID"
+        private const val NOTIFICATION_ID = 1
+    }
 
-      private var timerState = ACTIVE
-      private var currentTime = STUDY_TIME
+    private var timerState = ACTIVE
+    private var currentTime = STUDY_TIME
 
-      override fun onCreateView(
-          inflater: LayoutInflater, container: ViewGroup?,
-          savedInstanceState: Bundle?
-      ): View? {
-          _binding = FragmentClockBinding.inflate(inflater, container, false)
-          return binding.root
-      }
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentClockBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-      override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-          super.onViewCreated(view, savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        
+        setupNotificationPermissionHandler()
+        createNotificationChannel()
+        loadPreferences()
+        updateUI()
 
-          loadPreferences()
-          updateUI()
+        binding.startButton.setOnClickListener {
+            if (isRunning) {
+                stopTimer()
+            } else {
+                if (hasNotificationPermission) {
+                    startTimer()
+                } else {
+                    notificationPermissionHandler.checkAndRequestPermissions()
+                }
+            }
+        }
 
-          binding.startButton.setOnClickListener {
-              if (isRunning) {
-                  stopTimer()
-              } else {
-                  startTimer()
-              }
-          }
+        binding.resetButton.setOnClickListener {
+            resetTimer()
+        }
 
-          binding.resetButton.setOnClickListener {
-              resetTimer()
-          }
+        binding.timerText.setOnClickListener {
+            showSettingsDialog()
+        }
+    }
 
-          binding.timerText.setOnClickListener {
-              showSettingsDialog()
-          }
-      }
+    private fun setupNotificationPermissionHandler() {
+        notificationPermissionHandler = NotificationPermissionHandler(requireActivity() as AppCompatActivity)
+        notificationPermissionHandler.setupPermissions {
+            hasNotificationPermission = true
+            startTimer()
+        }
+    }
 
-      private fun showSettingsDialog() {
-          val dialog = SettingsDialogFragment()
-          dialog.setOnSaveSettingsListener(object : SettingsDialogFragment.OnSaveSettingsListener {
-              override fun onSaveSettings(studyTime: Int, restTime: Int, threadSleep: Long) {
-                  STUDY_TIME = studyTime
-                  REST_TIME = restTime
-                  THREAD_SLEEP = threadSleep
-                  resetTimer()
-                  savePreferences()
-              }
-          })
-          dialog.show(parentFragmentManager, "SettingsDialog")
-      }
+    private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val name = "Timer Notification"
+            val descriptionText = "Notification for running timer"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+                setSound(null, null)
+                enableVibration(false)
+            }
+            val notificationManager: NotificationManager =
+                requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
-      var totalToUpdateDay = 0;
-      private fun startTimer() {
-          isRunning = true
-          binding.startButton.text = "Stop"
-          Thread {
-              while (isRunning) {
-                  while (isRunning && currentTime >= 0) {
-                      Thread.sleep(THREAD_SLEEP)
-                      if (!isRunning) break
-                      currentTime--
-                      if(timerState == ACTIVE) totalToUpdateDay++
-                      activity?.runOnUiThread {
-                          updateUI()
-                          if (timerState == ACTIVE && currentTime % 60 == 0) {  // Save every 60 sec
-                              updateDay() 
-                          }
-                          if ( currentTime % 10 == 0) {
-                             savePreferences()
-                          }
-                      }
-                  }
-                  if (isRunning) {
-                      switchState()
-                      activity?.runOnUiThread {
-                          updateUI()
-                      }
-                  }
-              }
-          }.start()
-      }
+    private fun updateNotification() {
+        if (!hasNotificationPermission) return
 
-      private fun stopTimer() {
-          isRunning = false
-          binding.startButton.text = "Start"
-      }
+        val stateString = if (timerState == ACTIVE) "Study Time" else "Rest Time"
 
-      private fun resetTimer() {
-          stopTimer()
-          timerState = ACTIVE
-          currentTime = STUDY_TIME
-          updateUI()
-      }
+        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationBuilder = NotificationCompat.Builder(requireContext(), NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.clock)
+            .setContentTitle(stateString)
+            .setContentText("Time remaining: ${formatTime(currentTime)}")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSound(null)
+            .setVibrate(null)
 
-      private fun switchState() {
-          if (timerState == ACTIVE) {
-              timerState = REST
-              currentTime = REST_TIME
-          } else {
-              timerState = ACTIVE
-              currentTime = STUDY_TIME
-          }
-      }
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+    }
 
-      private fun updateDay() {
-          DayAdapter.getInstance()?.addSecStudied(totalToUpdateDay)
-          totalToUpdateDay=0
-      }
+    private fun formatTime(timeInSeconds: Int): String {
+      val hours = (timeInSeconds % (24 * 3600)) / 3600
+      val minutes = (timeInSeconds % 3600) / 60
+      val seconds = timeInSeconds % 60
+      return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
 
-      private fun updateUI() {
-          val hours = (currentTime % (24 * 3600)) / 3600
-          val minutes = (currentTime % 3600) / 60
-          val seconds = currentTime % 60
+    private fun cancelNotification() {
+        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(NOTIFICATION_ID)
+    }
 
-          binding.timerText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    var totalToUpdateDay = 0
+    private fun startTimer() {
+        isRunning = true
+        binding.startButton.text = "Stop"
+        updateNotification()
+        
+        Thread {
+            while (isRunning) {
+                while (isRunning && currentTime >= 0) {
+                    Thread.sleep(THREAD_SLEEP)
+                    if (!isRunning) break
+                    currentTime--
+                    if (timerState == ACTIVE) totalToUpdateDay++
+                    activity?.runOnUiThread {
+                        updateUI()
+                        if (timerState == ACTIVE && currentTime % 60 == 0) {
+                            updateDay()
+                        }
+                        if (currentTime % 10 == 0) {
+                            savePreferences()
+                            updateNotification()
+                        }
+                    }
+                }
+                if (isRunning) {
+                    switchState()
+                    activity?.runOnUiThread {
+                        updateUI()
+                        updateNotification()
+                    }
+                }
+            }
+        }.start()
+    }
 
-          val totalTime = if (timerState == ACTIVE) STUDY_TIME else REST_TIME
-          val progress = ((totalTime - currentTime).toFloat() / totalTime * 100).toInt()
-          binding.progressBar.progress = progress
-      }
+    private fun stopTimer() {
+        isRunning = false
+        binding.startButton.text = "Start"
+        cancelNotification()
+    }
 
-      private fun loadPreferences() {
-          val prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-          timerState = prefs.getInt(KEY_TIMER_STATE, ACTIVE)
-          currentTime = prefs.getInt(KEY_CURRENT_TIME, STUDY_TIME)
-          STUDY_TIME = prefs.getInt(KEY_STUDY_TIME, STUDY_TIME)
-          REST_TIME = prefs.getInt(KEY_REST_TIME, REST_TIME)
-          THREAD_SLEEP = prefs.getLong(KEY_THREAD_SLEEP, THREAD_SLEEP)
-      }
+    private fun resetTimer() {
+        stopTimer()
+        timerState = ACTIVE
+        currentTime = STUDY_TIME
+        updateUI()
+    }
 
-      private fun savePreferences() {
-          val prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-          with(prefs.edit()) {
-              putInt(KEY_TIMER_STATE, timerState)
-              putInt(KEY_CURRENT_TIME, currentTime)
-              putInt(KEY_STUDY_TIME, STUDY_TIME)
-              putInt(KEY_REST_TIME, REST_TIME)
-              putLong(KEY_THREAD_SLEEP, THREAD_SLEEP)
-              apply()
-          }
-      }
+    private fun switchState() {
+        if (timerState == ACTIVE) {
+            timerState = REST
+            currentTime = REST_TIME
+        } else {
+            timerState = ACTIVE
+            currentTime = STUDY_TIME
+        }
+    }
 
-      override fun onDestroyView() {
-          _binding = null
-          super.onDestroyView()
-      }
-  }
+    private fun updateDay() {
+        DayAdapter.getInstance()?.addSecStudied(totalToUpdateDay)
+        totalToUpdateDay = 0
+    }
+
+    private fun updateUI() {
+        binding.timerText.text = formatTime(currentTime)
+
+        val totalTime = if (timerState == ACTIVE) STUDY_TIME else REST_TIME
+        val progress = ((totalTime - currentTime).toFloat() / totalTime * 100).toInt()
+        binding.progressBar.progress = progress
+    }
+
+    private fun loadPreferences() {
+        val prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        timerState = prefs.getInt(KEY_TIMER_STATE, ACTIVE)
+        currentTime = prefs.getInt(KEY_CURRENT_TIME, STUDY_TIME)
+        STUDY_TIME = prefs.getInt(KEY_STUDY_TIME, STUDY_TIME)
+        REST_TIME = prefs.getInt(KEY_REST_TIME, REST_TIME)
+        THREAD_SLEEP = prefs.getLong(KEY_THREAD_SLEEP, THREAD_SLEEP)
+    }
+
+    private fun savePreferences() {
+        val prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        with(prefs.edit()) {
+            putInt(KEY_TIMER_STATE, timerState)
+            putInt(KEY_CURRENT_TIME, currentTime)
+            putInt(KEY_STUDY_TIME, STUDY_TIME)
+            putInt(KEY_REST_TIME, REST_TIME)
+            putLong(KEY_THREAD_SLEEP, THREAD_SLEEP)
+            apply()
+        }
+    }
+
+    private fun showSettingsDialog() {
+        val dialog = SettingsDialogFragment()
+        dialog.setOnSaveSettingsListener(object : SettingsDialogFragment.OnSaveSettingsListener {
+            override fun onSaveSettings(studyTime: Int, restTime: Int, threadSleep: Long) {
+                STUDY_TIME = studyTime
+                REST_TIME = restTime
+                THREAD_SLEEP = threadSleep
+                resetTimer()
+                savePreferences()
+            }
+        })
+        dialog.show(parentFragmentManager, "SettingsDialog")
+    }
+
+
+    override fun onDestroyView() {
+        if (isRunning) {
+            cancelNotification()
+        }
+        _binding = null
+        super.onDestroyView()
+    }
+}

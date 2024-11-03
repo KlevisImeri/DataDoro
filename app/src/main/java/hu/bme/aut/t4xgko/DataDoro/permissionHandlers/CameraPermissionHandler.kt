@@ -1,4 +1,4 @@
-package hu.bme.aut.t4xgko.DataDoro
+package hu.bme.aut.t4xgko.DataDoro.permissionHandlers
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -8,7 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 
-class PermissionHandler(private val activity: AppCompatActivity) {
+class CameraPermissionHandler(private val activity: AppCompatActivity) {
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
         Manifest.permission.WRITE_EXTERNAL_STORAGE

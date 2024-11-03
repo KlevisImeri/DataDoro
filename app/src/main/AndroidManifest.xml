@@ -5,6 +5,10 @@
   <uses-permission android:name="android.permission.CAMERA" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
     android:maxSdkVersion="28" />
+    
+  <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
   <application
     android:allowBackup="true"
@@ -27,6 +31,11 @@
     </activity>
     <activity android:name=".DayActivity" />
     <activity android:name=".CameraActivity" />
+
+    <!-- <service 
+      android:name=".service.ClockService"
+      android:enabled="true"
+      android:exported="false" /> -->
     
     <!-- <provider
       android:name="androidx.core.content.FileProvider"
