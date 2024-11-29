@@ -1,6 +1,6 @@
 <div align="center">
 
-# DataDoro
+# [DataDoro](https://github.com/KlevisImeri/DataDoro)
 A collecting data pomodoro timer
 
 <div style="display: flex; justify-content: space-between;">
