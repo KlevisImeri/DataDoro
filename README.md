@@ -1,12 +1,16 @@
-<center>
-    <h1>DataDoro</h1>
-    <p >A collecting data pomodoro timer</p>
-</center>
+<div align="center">
+
+# DataDoro
+A collecting data pomodoro timer
 
 <div style="display: flex; justify-content: space-between;">
     <img src="Images/Main.png" alt="Main Activity" style="width: 45%;"/>
     <img src="Images/Day.png" alt="Day Activity" style="width: 45%;"/>
 </div>
+
+</div>
+
+
 
 To run:
 ```
