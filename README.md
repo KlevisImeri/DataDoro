@@ -8,7 +8,9 @@ A collecting data pomodoro timer
     <img src="Images/Day.png" alt="Day Activity" style="width: 45%;"/>
 </div>
 
+### You can watch the explanation in this [video](https://youtu.be/yJ25sk2I6bI).
 </div>
+
 
 
 
