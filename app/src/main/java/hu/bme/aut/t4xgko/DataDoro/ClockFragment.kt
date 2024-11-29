@@ -122,17 +122,17 @@ class ClockFragment : Fragment() {
 
         val stateString = if (timerState == ACTIVE) "Study Time" else "Rest Time"
 
-        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationBuilder = NotificationCompat.Builder(requireContext(), NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.clock)
             .setContentTitle(stateString)
             .setContentText("Time remaining: ${formatTime(currentTime)}")
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
+            .setOngoing(true) 
             .setOnlyAlertOnce(true)
             .setSound(null)
-            .setVibrate(null)
+            .setVibrate(null);
 
+        val notificationManager = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
     }
 
@@ -150,38 +150,44 @@ class ClockFragment : Fragment() {
 
     var totalToUpdateDay = 0
     private fun startTimer() {
-        isRunning = true
-        binding.startButton.text = "Stop"
-        startSound?.start()
-        updateNotification()
-        
-        Thread {
-            while (isRunning) {
-                while (isRunning && currentTime >= 0) {
-                    Thread.sleep(THREAD_SLEEP)
-                    if (!isRunning) break
-                    currentTime--
-                    if (timerState == ACTIVE) totalToUpdateDay++
-                    activity?.runOnUiThread {
-                        updateUI()
-                        if (timerState == ACTIVE && currentTime % 60 == 0) {
-                            updateDay()
-                        }
-                        if (currentTime % 10 == 0) {
-                            savePreferences()
-                            updateNotification()
-                        }
+      isRunning = true
+      binding.startButton.text = "Stop"
+      startSound?.start()
+      updateNotification()
+
+      val handler = Handler(Looper.getMainLooper())
+      val runnable = object : Runnable {
+          override fun run() {
+              if (!isRunning) return
+
+              if (currentTime >= 0) {
+                  currentTime--
+                  updateUI()
+
+                  if (timerState == ACTIVE){
+                    totalToUpdateDay++
+                    if (currentTime % 60 == 0) {
+                      updateDay()
                     }
-                }
-                if (isRunning) {
-                    switchState()
-                    activity?.runOnUiThread {
-                        updateUI()
-                        updateNotification()
-                    }
-                }
-            }
-        }.start()
+                  } 
+                  
+                  if (currentTime % 10 == 0) {
+                      savePreferences()
+                      updateNotification()
+                  }
+
+                  handler.postDelayed(this, THREAD_SLEEP)
+              } else {
+                  if (isRunning) {
+                      switchState()
+                      updateUI()
+                      updateNotification()
+                  }
+              }
+          }
+      }
+
+      handler.post(runnable)
     }
 
     private fun stopTimer() {

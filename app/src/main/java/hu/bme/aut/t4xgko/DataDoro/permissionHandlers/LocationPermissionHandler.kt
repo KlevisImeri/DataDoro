@@ -58,13 +58,12 @@ class LocationPermissionHandler(private val activity: AppCompatActivity) {
         permissionLauncher.launch(requiredPermissions)
     }
 
-    fun getLastKnownLocation(): String? {
-        val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
+    fun getLastKnownLocation(): Location? {
         if (!hasRequiredPermissions()) {
             return null
         }
 
+        val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val providers = locationManager.getProviders(true)
         var bestLocation: Location? = null
 
@@ -75,14 +74,6 @@ class LocationPermissionHandler(private val activity: AppCompatActivity) {
             }
         }
 
-        bestLocation?.let {
-            val geocoder = Geocoder(activity, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-            if (!addresses.isNullOrEmpty()) {
-                return addresses[0].locality
-            }
-        }
-
-        return null
+        return bestLocation;
     }
 }

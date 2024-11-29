@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import hu.bme.aut.t4xgko.DataDoro.network.WeatherAPI.WeatherInfo
 
 class DayActivity : AppCompatActivity() {
     
@@ -80,17 +81,20 @@ class DayActivity : AppCompatActivity() {
 
     private fun fetchLocationAndWeather() {
             if (day.City == null || day.Temperature == null) {
-                val currCity = locationPermissionHandler.getLastKnownLocation()
-                if (currCity != null) {
-                    day.City = currCity
-                    WeatherAPI.getAverageTemperature(currCity) { temperature ->
+                val location = locationPermissionHandler.getLastKnownLocation()
+                if (location != null) {
+                    WeatherAPI.getWeatherInfo(location) { weatherInfo ->
                         runOnUiThread {
-                            if (temperature != null) {
-                                day.Temperature = temperature
+                            if (weatherInfo != null) {
+                                day.Temperature = weatherInfo.averageTemp
+                                day.City = weatherInfo.cityName
                                 saveDay()
                                 updateUI()
                             } else {
-                                Toast.makeText(this, "Failed to fetch weather data", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, 
+                                  "Failed to fetch weather data! You dont have internet", 
+                                  Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     }
@@ -113,8 +117,13 @@ class DayActivity : AppCompatActivity() {
             val hoursStudied = day.TimeStudiedSec / 3600.0
             val goalHours = day.GoalTimeSec / 3600.0
             tvTimeStudied.text = String.format("%.1fh/%.1fh", hoursStudied, goalHours)
-            val temperatureDisplay = day.Temperature?.let { "$it°C" } ?: "N/A"
-            binding.tvWeather.text = "${day.City} | $temperatureDisplay"
+            binding.tvWeather.text = 
+              if (day.City == null && day.Temperature == null) {
+                ""
+              } else {
+                  "${day.City ?: ""} | ${day.Temperature?.let { "$it°C" } ?: ""}"
+              }
+
         }
     }
 

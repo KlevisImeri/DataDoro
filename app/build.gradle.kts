@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
+    // For the future if you want to fix formatting
+    // id("org.jlleitschuh.gradle.ktlint") version "12.1.2" 
 }
 
 android {
@@ -23,11 +25,11 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -63,7 +65,6 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
 
-
     // val glide_version = "4.13.2"
     // implementation("com.github.bumptech.glide:glide:$glide_version")
     // kapt("com.github.bumptech.glide:compiler:$glide_version")
@@ -81,4 +82,3 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:${retrofit_version}")
 
 }
-

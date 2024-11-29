@@ -17,7 +17,7 @@ class CameraPermissionHandler(private val activity: AppCompatActivity) {
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private var onPermissionsGranted: () -> Unit = {}
 
-    fun setupPermissions(onGranted: () -> Unit) {
+    fun setupPermissions(onGranted: () -> Unit) { 
         onPermissionsGranted = onGranted
         permissionLauncher = activity.registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
