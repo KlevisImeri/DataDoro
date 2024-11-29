@@ -1,13 +1,5 @@
 {
   "java.configuration.updateBuildConfiguration": "disabled",
-  "vim.handleKeys": {
-    "<C-p>": false,
-    "<C-a>": false,
-    "<C-f>": false,
-    "<C-x>": false,
-    "<C-c>": false,
-    "<C-v>": false,
-  },
   "editor.tabSize": 4,
   "editor.insertSpaces": true
 }
