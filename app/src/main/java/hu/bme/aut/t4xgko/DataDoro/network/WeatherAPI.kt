@@ -58,7 +58,7 @@ class WeatherAPI {
                         val averageTemp = (weatherResponse.main.temp_min + weatherResponse.main.temp_max) / 2
                         
                         val weatherInfo = WeatherInfo(
-                            cityName = "${weatherResponse.name}, ${weatherResponse.sys.country}",
+                            cityName = "${weatherResponse.name}",
                             averageTemp = averageTemp.roundToInt()
                         )
                         

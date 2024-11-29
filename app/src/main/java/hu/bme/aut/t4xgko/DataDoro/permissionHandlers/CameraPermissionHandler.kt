@@ -17,22 +17,23 @@ class CameraPermissionHandler(private val activity: AppCompatActivity) {
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private var onPermissionsGranted: () -> Unit = {}
 
-    fun setupPermissions(onGranted: () -> Unit) { 
+    fun setupPermissions(onGranted: () -> Unit, onNotGranted: () -> Unit) { 
         onPermissionsGranted = onGranted
         permissionLauncher = activity.registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { permissions ->
-            if (permissions.all { it.value }) {
-                onPermissionsGranted()
-            } else {
-                Toast.makeText(
-                    activity,
-                    "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.all { it.value }) {
+            onPermissionsGranted()
+        } else {
+            onNotGranted()
+            Toast.makeText(
+                activity,
+                "Camera Permissions not granted by the user. Please enable in the settings!",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
+}
 
     fun checkAndRequestPermissions() {
         if (hasRequiredPermissions()) {

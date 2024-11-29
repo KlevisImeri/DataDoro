@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import hu.bme.aut.t4xgko.DataDoro.network.WeatherAPI.WeatherInfo
+import java.util.Locale
 
 class DayActivity : AppCompatActivity() {
     
@@ -41,12 +42,12 @@ class DayActivity : AppCompatActivity() {
         binding = ActivityDayBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupDay()
+
         locationPermissionHandler = LocationPermissionHandler(this)
         locationPermissionHandler.setupPermissions {
-          setupDay()
+            fetchLocationAndWeather()
         }
-        locationPermissionHandler.checkAndRequestPermissions()
-
         
         setupClickListeners()
     }
@@ -56,8 +57,17 @@ class DayActivity : AppCompatActivity() {
             finish()
             return
         }
+        
+        Thread {
+            val loadedDay = AppDatabase.getInstance(this@DayActivity).dayDao().getDay(yearMonthDay)
+            day = loadedDay ?: Day.nullDay()
+            updateUI()
+            locationPermissionHandler.checkAndRequestPermissions()
+            runOnUiThread{
+            }
+        }.start()
 
-        loadDayData(yearMonthDay)
+        
     }
 
     private fun setupClickListeners() {
@@ -68,62 +78,50 @@ class DayActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadDayData(yearMonthDay: String) {
-        Thread {
-            val loadedDay = AppDatabase.getInstance(this@DayActivity).dayDao().getDay(yearMonthDay)
-            day = loadedDay ?: Day.nullDay()
-            fetchLocationAndWeather()
-            runOnUiThread {
-                updateUI()
-            }
-        }.start()
-    }
-
     private fun fetchLocationAndWeather() {
-            if (day.City == null || day.Temperature == null) {
-                val location = locationPermissionHandler.getLastKnownLocation()
-                if (location != null) {
-                    WeatherAPI.getWeatherInfo(location) { weatherInfo ->
-                        runOnUiThread {
-                            if (weatherInfo != null) {
-                                day.Temperature = weatherInfo.averageTemp
-                                day.City = weatherInfo.cityName
-                                saveDay()
-                                updateUI()
-                            } else {
-                                Toast.makeText(this, 
-                                  "Failed to fetch weather data! You dont have internet", 
-                                  Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
+        if (!(day.City == null || day.Temperature == null)) return
+        val location = locationPermissionHandler.getLastKnownLocation()
+        if (location == null) return
+        WeatherAPI.getWeatherInfo(location) { weatherInfo ->
+            runOnUiThread {
+                if (weatherInfo != null) {
+                    day.Temperature = weatherInfo.averageTemp
+                    day.City = weatherInfo.cityName
+                    saveDay()
+                    updateUI()
+                } else {
+                    Toast.makeText(this, 
+                        "Failed to fetch weather data! You dont have internet", 
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
+        }
     }
 
     private fun updateUI() {
-        with(binding) {
-            tvDate.text = day.YearMonthDay
-            editTextDate.setText(day.dayText)
-            progressBar.apply {
-                max = day.GoalTimeSec
-                progress = day.TimeStudiedSec
+        runOnUiThread {
+            with(binding) {
+                tvDate.text = day.YearMonthDay
+                editTextDate.setText(day.dayText)
+                progressBar.apply {
+                    max = day.GoalTimeSec
+                    progress = day.TimeStudiedSec
+                }
+                day.image?.let { imagePath ->
+                    val bitmap = BitmapFactory.decodeFile(imagePath)
+                    imageView.setImageBitmap(bitmap)
+                }
+                val hoursStudied = day.TimeStudiedSec / 3600.0
+                val goalHours = day.GoalTimeSec / 3600.0
+                tvTimeStudied.text = String.format(Locale.getDefault(),"%.1fh/%.1fh", hoursStudied, goalHours)
+                binding.tvWeather.text = 
+                if (day.City == null && day.Temperature == null) {
+                    ""
+                } else {
+                    "${day.City ?: ""} | ${day.Temperature?.let { "$it°C" } ?: ""}"
+                }
             }
-            day.image?.let { imagePath ->
-                val bitmap = BitmapFactory.decodeFile(imagePath)
-                imageView.setImageBitmap(bitmap)
-            }
-            val hoursStudied = day.TimeStudiedSec / 3600.0
-            val goalHours = day.GoalTimeSec / 3600.0
-            tvTimeStudied.text = String.format("%.1fh/%.1fh", hoursStudied, goalHours)
-            binding.tvWeather.text = 
-              if (day.City == null && day.Temperature == null) {
-                ""
-              } else {
-                  "${day.City ?: ""} | ${day.Temperature?.let { "$it°C" } ?: ""}"
-              }
-
         }
     }
 

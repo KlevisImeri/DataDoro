@@ -10,6 +10,7 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import hu.bme.aut.t4xgko.DataDoro.databinding.DialogSettingsBinding
+import java.util.Locale
 
 class SettingsDialogFragment : DialogFragment() {
 
@@ -42,7 +43,7 @@ class SettingsDialogFragment : DialogFragment() {
         binding.btnPickStudyTime.setOnClickListener {
             showTimePicker { hours, minutes ->
                 val studyTimeInSeconds = hours * 3600 + minutes * 60
-                binding.btnPickStudyTime.text = String.format("%02d:%02d", hours, minutes)
+                binding.btnPickStudyTime.text = String.format(Locale.getDefault(),"%02d:%02d", hours, minutes)
                 binding.btnPickStudyTime.tag = studyTimeInSeconds
             }
         }
@@ -50,7 +51,7 @@ class SettingsDialogFragment : DialogFragment() {
         binding.btnPickRestTime.setOnClickListener {
             showTimePicker { hours, minutes ->
                 val restTimeInSeconds = hours * 3600 + minutes * 60
-                binding.btnPickRestTime.text = String.format("%02d:%02d", hours, minutes)
+                binding.btnPickRestTime.text = String.format(Locale.getDefault(),"%02d:%02d", hours, minutes)
                 binding.btnPickRestTime.tag = restTimeInSeconds
             }
         }

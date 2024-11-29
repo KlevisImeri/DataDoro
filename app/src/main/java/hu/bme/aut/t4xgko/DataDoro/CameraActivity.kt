@@ -51,7 +51,15 @@ class CameraActivity : AppCompatActivity() {
 
     private fun setupPermissions() {
         cameraPermissionHandler = CameraPermissionHandler(this)
-        cameraPermissionHandler.setupPermissions { startCamera() }
+        cameraPermissionHandler.setupPermissions(
+            onGranted = {
+                startCamera()
+            },
+            onNotGranted = {
+                setResult(RESULT_OK, Intent())
+                finish()
+            }
+        )
         cameraPermissionHandler.checkAndRequestPermissions()
     }
 

@@ -18,6 +18,9 @@ import hu.bme.aut.t4xgko.DataDoro.databinding.FragmentClockBinding
 import hu.bme.aut.t4xgko.DataDoro.adapter.DayAdapter
 import hu.bme.aut.t4xgko.DataDoro.SettingsDialogFragment
 import hu.bme.aut.t4xgko.DataDoro.permissionHandlers.NotificationPermissionHandler
+import java.util.Locale
+import java.util.Timer
+import java.util.TimerTask
 
 
 class ClockFragment : Fragment() {
@@ -48,6 +51,8 @@ class ClockFragment : Fragment() {
     private var currentTime = STUDY_TIME
     private var startSound: MediaPlayer? = null
     private var endSound: MediaPlayer? = null
+    private val timer = Timer()
+    private var timerTask: TimerTask? = null
  
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -84,6 +89,8 @@ class ClockFragment : Fragment() {
         binding.timerText.setOnClickListener {
             showSettingsDialog()
         }
+
+
     }
 
     private fun initializeMediaPlayers() {
@@ -137,10 +144,10 @@ class ClockFragment : Fragment() {
     }
 
     private fun formatTime(timeInSeconds: Int): String {
-      val hours = (timeInSeconds % (24 * 3600)) / 3600
-      val minutes = (timeInSeconds % 3600) / 60
-      val seconds = timeInSeconds % 60
-      return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        val hours = (timeInSeconds % (24 * 3600)) / 3600
+        val minutes = (timeInSeconds % 3600) / 60
+        val seconds = timeInSeconds % 60
+        return String.format(Locale.getDefault(),"%02d:%02d:%02d", hours, minutes, seconds)
     }
 
     private fun cancelNotification() {
@@ -148,51 +155,52 @@ class ClockFragment : Fragment() {
         notificationManager.cancel(NOTIFICATION_ID)
     }
 
-    var totalToUpdateDay = 0
-    private fun startTimer() {
-      isRunning = true
-      binding.startButton.text = "Stop"
-      startSound?.start()
-      updateNotification()
 
-      val handler = Handler(Looper.getMainLooper())
-      val runnable = object : Runnable {
-          override fun run() {
-              if (!isRunning) return
+    fun newTimerTask() : TimerTask {
+        return object: TimerTask() {
+            var secondsStudied: Int = 0;
 
-              if (currentTime >= 0) {
-                  currentTime--
-                  updateUI()
+            override fun run() {
+                if (currentTime >= 0) {
+                    currentTime--
+                    updateUI()
 
-                  if (timerState == ACTIVE){
-                    totalToUpdateDay++
-                    if (currentTime % 60 == 0) {
-                      updateDay()
+                    if (timerState == ACTIVE) {
+                        secondsStudied++
+                        if (currentTime % 60 == 0) {
+                            updateDay(secondsStudied)
+                            secondsStudied = 0
+                        }
                     }
-                  } 
-                  
-                  if (currentTime % 10 == 0) {
-                      savePreferences()
-                      updateNotification()
-                  }
 
-                  handler.postDelayed(this, THREAD_SLEEP)
-              } else {
-                  if (isRunning) {
-                      switchState()
-                      updateUI()
-                      updateNotification()
-                  }
-              }
-          }
-      }
+                    if (currentTime % 10 == 0) {
+                        savePreferences()
+                        updateNotification()
+                    }
+                } else {
+                    switchState()
+                    updateUI()
+                    updateNotification()
+                }
+            }
+        }
+    }
 
-      handler.post(runnable)
+    private fun startTimer() {
+        isRunning = true
+        binding.startButton.text = "Stop"
+        startSound?.start()
+        timerTask = newTimerTask()
+        timer.scheduleAtFixedRate(timerTask, 0, THREAD_SLEEP)
+        updateNotification()
     }
 
     private fun stopTimer() {
-        isRunning = false
+        isRunning = false //Dont remove you need if to chage the fucntion for the buttons
+        timerTask?.cancel()
+        timerTask = null
         binding.startButton.text = "Start"
+        savePreferences()
         cancelNotification()
     }
 
@@ -200,6 +208,7 @@ class ClockFragment : Fragment() {
         stopTimer()
         timerState = ACTIVE
         currentTime = STUDY_TIME
+        savePreferences()
         updateUI()
     }
 
@@ -215,17 +224,18 @@ class ClockFragment : Fragment() {
         }
     }
 
-    private fun updateDay() {
-        DayAdapter.getInstance()?.addSecStudied(totalToUpdateDay)
-        totalToUpdateDay = 0
+    private fun updateDay(secondsStudied: Int) {
+        DayAdapter.getInstance()?.addSecStudied(secondsStudied)
     }
 
     private fun updateUI() {
+       activity?.runOnUiThread {
         binding.timerText.text = formatTime(currentTime)
 
         val totalTime = if (timerState == ACTIVE) STUDY_TIME else REST_TIME
         val progress = ((totalTime - currentTime).toFloat() / totalTime * 100).toInt()
         binding.progressBar.progress = progress
+      }
     }
 
     private fun loadPreferences() {

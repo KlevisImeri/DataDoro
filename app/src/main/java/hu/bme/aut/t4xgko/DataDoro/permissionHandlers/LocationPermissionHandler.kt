@@ -33,7 +33,7 @@ class LocationPermissionHandler(private val activity: AppCompatActivity) {
             } else {
                 Toast.makeText(
                     activity,
-                    "Location permissions not granted by the user.",
+                    "Location permissions not granted by the user. Please allow exact location!",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -62,15 +62,20 @@ class LocationPermissionHandler(private val activity: AppCompatActivity) {
         if (!hasRequiredPermissions()) {
             return null
         }
-
+        
         val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val providers = locationManager.getProviders(true)
         var bestLocation: Location? = null
 
         for (provider in providers) {
-            val location = locationManager.getLastKnownLocation(provider) ?: continue
-            if (bestLocation == null || location.accuracy < bestLocation.accuracy) {
-                bestLocation = location
+            try {
+                val location = locationManager.getLastKnownLocation(provider) ?: continue
+                if (bestLocation == null || location.accuracy < bestLocation.accuracy) {
+                    bestLocation = location
+                }            
+            } catch (e: SecurityException) {
+              e.printStackTrace()
+              //You man have Course permmision but not the fine one
             }
         }
 

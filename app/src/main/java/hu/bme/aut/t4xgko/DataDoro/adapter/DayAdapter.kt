@@ -13,6 +13,7 @@ import hu.bme.aut.t4xgko.DataDoro.databinding.DayRowBinding
 import hu.bme.aut.t4xgko.DataDoro.touch.DayTouchHelperCallback
 import java.util.Collections
 import java.time.LocalDate
+import java.util.Locale
 
 class DayAdapter private constructor(private val context: Context) : RecyclerView.Adapter<DayAdapter.ViewHolder>(), DayTouchHelperCallback {
 
@@ -21,7 +22,6 @@ class DayAdapter private constructor(private val context: Context) : RecyclerVie
     var dayItems = mutableListOf<Day>()
 
     companion object {
-        @Volatile
         private var INSTANCE: DayAdapter? = null
 
         fun getInstance(context: Context): DayAdapter {
@@ -49,7 +49,7 @@ class DayAdapter private constructor(private val context: Context) : RecyclerVie
         
         val hoursStudied = thisDay.TimeStudiedSec / 3600.0
         val goalHours = thisDay.GoalTimeSec / 3600.0
-        holder.binding.tvTimeStudied.text = String.format("%.1fh/%.1fh", hoursStudied, goalHours)
+        holder.binding.tvTimeStudied.text = String.format(Locale.getDefault(),"%.1fh/%.1fh", hoursStudied, goalHours)
 
         val progress = if (thisDay.GoalTimeSec > 0) {
             (thisDay.TimeStudiedSec.toFloat() / thisDay.GoalTimeSec * 100).toInt()

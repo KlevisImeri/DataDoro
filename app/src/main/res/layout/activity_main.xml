@@ -9,13 +9,13 @@
   android:fitsSystemWindows="true"
   tools:context=".MainActivity">
 
-  <fragment
+  <androidx.fragment.app.FragmentContainerView
     android:id="@+id/clockFragment"
     android:name="hu.bme.aut.t4xgko.DataDoro.ClockFragment"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" />
 
-  <fragment
+  <androidx.fragment.app.FragmentContainerView
     android:id="@+id/dayListFragment"
     android:name="hu.bme.aut.t4xgko.DataDoro.DayListFragment"
     android:layout_width="match_parent"
